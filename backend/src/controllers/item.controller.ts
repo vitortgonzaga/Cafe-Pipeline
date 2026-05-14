@@ -4,16 +4,21 @@ import { ItemService } from "../services/item.service";
 export class ItemController {
   constructor(private readonly service: ItemService) {}
 
-  create = (req: Request, res: Response, next: NextFunction): void => {
+  create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const item = this.service.create(req.body);
+      const item = await this.service.create(req.body);
       res.status(201).json(item);
     } catch (error) {
       next(error);
     }
   };
 
-  list = (_req: Request, res: Response): void => {
-    res.status(200).json(this.service.list());
+  list = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const items = await this.service.list();
+      res.status(200).json(items);
+    } catch (error) {
+      next(error);
+    }
   };
 }

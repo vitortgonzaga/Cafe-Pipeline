@@ -1,32 +1,28 @@
-import { randomUUID } from "node:crypto";
+import type { CafeItem } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import type { CreateItemInput } from "../types/item.types";
 import { calculateItemStatus } from "../services/item-status.service";
 
-type CafeItem = CreateItemInput & {
-  id: string;
-  status: "AVAILABLE" | "LOW_STOCK" | "OUT_OF_STOCK";
-  createdAt: Date;
-  updatedAt: Date;
-};
-
 export class ItemRepository {
-  private items: CafeItem[] = [];
-
-  create(input: CreateItemInput): CafeItem {
-    const now = new Date();
-    const item: CafeItem = {
-      id: randomUUID(),
-      ...input,
-      status: calculateItemStatus(input.quantity, input.minQuantity),
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    this.items.push(item);
-    return item;
+  async create(input: CreateItemInput): Promise<CafeItem> {
+    return prisma.cafeItem.create({
+      data: {
+        name: input.name,
+        category: input.category,
+        quantity: input.quantity,
+        minQuantity: input.minQuantity,
+        unit: input.unit,
+        criticality: input.criticality,
+        status: calculateItemStatus(input.quantity, input.minQuantity),
+      },
+    });
   }
 
-  findAll(): CafeItem[] {
-    return this.items;
+  async findAll(): Promise<CafeItem[]> {
+    return prisma.cafeItem.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
   }
 }
