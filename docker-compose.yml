@@ -1,4 +1,18 @@
 services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pipeline-cafe-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pipeline_cafe?schema=public
+    ports:
+      - "3001:3001"
+
   postgres:
     image: postgres:16-alpine
     container_name: pipeline-cafe-postgres
