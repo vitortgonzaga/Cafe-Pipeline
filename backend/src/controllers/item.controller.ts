@@ -53,4 +53,31 @@ export class ItemController {
       next(error);
     }
   };
+
+  addStock = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const item = await this.service.addStock(this.getIdParam(req), req.body);
+      res.status(200).json(item);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  consumeStock = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const item = await this.service.consumeStock(this.getIdParam(req), req.body);
+      res.status(200).json(item);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  listMovements = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const movements = await this.service.listMovements(this.getIdParam(req));
+      res.status(200).json(movements);
+    } catch (error) {
+      next(error);
+    }
+  };
 }

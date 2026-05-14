@@ -14,5 +14,8 @@ router.get("/items", itemController.list);
 router.get("/items/:id", itemController.getById);
 router.put("/items/:id", itemController.update);
 router.delete("/items/:id", itemController.delete);
+router.post("/items/:id/movements/in", itemController.addStock);
+router.post("/items/:id/movements/out", itemController.consumeStock);
+router.get("/items/:id/movements", itemController.listMovements);
 
 export { router as itemRoutes };
