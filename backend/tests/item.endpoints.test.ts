@@ -189,4 +189,46 @@ describe("Item endpoints", () => {
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe("ROUTE_NOT_FOUND");
   });
+
+  it("returns health status", async () => {
+    const response = await request(app).get("/health");
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ status: "ok" });
+  });
+
+  it("creates and lists items", async () => {
+    const now = new Date();
+    const payload = {
+      name: "Cafe de Deploy",
+      category: "DEPLOY",
+      quantity: 10,
+      minQuantity: 2,
+      unit: "UNIT",
+      criticality: "MEDIUM",
+    };
+
+    mockPrisma.cafeItem.create.mockResolvedValueOnce({
+      id: itemId,
+      ...payload,
+      status: "AVAILABLE",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const createResponse = await request(app).post("/api/items").send(payload);
+    expect(createResponse.status).toBe(201);
+    expect(createResponse.body.id).toBe(itemId);
+
+    mockPrisma.cafeItem.findMany.mockResolvedValueOnce([createResponse.body]);
+    const listResponse = await request(app).get("/api/items");
+    expect(listResponse.status).toBe(200);
+    expect(listResponse.body).toHaveLength(1);
+  });
+
+  it("returns 500 on unexpected repository error", async () => {
+    mockPrisma.cafeItem.findMany.mockRejectedValueOnce(new Error("boom"));
+    const response = await request(app).get("/api/items");
+    expect(response.status).toBe(500);
+    expect(response.body.error.code).toBe("INTERNAL_SERVER_ERROR");
+  });
 });
