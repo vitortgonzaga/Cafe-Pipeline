@@ -1,6 +1,6 @@
 import type { CafeItem } from "@prisma/client";
 import { prisma } from "../lib/prisma";
-import type { CreateItemInput } from "../types/item.types";
+import type { CreateItemInput, UpdateItemInput } from "../types/item.types";
 import { calculateItemStatus } from "../services/item-status.service";
 
 export class ItemRepository {
@@ -23,6 +23,33 @@ export class ItemRepository {
       orderBy: {
         createdAt: "desc",
       },
+    });
+  }
+
+  async findById(id: string): Promise<CafeItem | null> {
+    return prisma.cafeItem.findUnique({
+      where: { id },
+    });
+  }
+
+  async update(id: string, input: UpdateItemInput): Promise<CafeItem> {
+    return prisma.cafeItem.update({
+      where: { id },
+      data: {
+        name: input.name,
+        category: input.category,
+        quantity: input.quantity,
+        minQuantity: input.minQuantity,
+        unit: input.unit,
+        criticality: input.criticality,
+        status: calculateItemStatus(input.quantity, input.minQuantity),
+      },
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await prisma.cafeItem.delete({
+      where: { id },
     });
   }
 }

@@ -9,4 +9,11 @@ export const createItemSchema = z.object({
   criticality: z.enum(["LOW", "MEDIUM", "HIGH"]),
 });
 
+export const itemIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const updateItemSchema = createItemSchema;
+
 export type CreateItemInput = z.infer<typeof createItemSchema>;
+export type UpdateItemInput = z.infer<typeof updateItemSchema>;
