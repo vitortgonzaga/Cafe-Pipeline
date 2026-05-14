@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  COFFEE
+  SNACK
+  ENERGY_DRINK
+  TESTING
+  DEPLOY
+  ROLLBACK
+  HOTFIX
+}
+
+enum Unit {
+  UNIT
+  KG
+  LITER
+  PACKAGE
+}
+
+enum Criticality {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ItemStatus {
+  AVAILABLE
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
+enum MovementType {
+  IN
+  OUT
+}
+
+model CafeItem {
+  id          String          @id @default(uuid())
+  name        String
+  category    Category
+  quantity    Int
+  minQuantity Int
+  unit        Unit
+  criticality Criticality
+  status      ItemStatus
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  movements   StockMovement[]
+}
+
+model StockMovement {
+  id          String       @id @default(uuid())
+  itemId      String
+  type        MovementType
+  quantity    Int
+  reason      String
+  responsible String
+  createdAt   DateTime     @default(now())
+
+  item CafeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
