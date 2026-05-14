@@ -1,11 +1,11 @@
-# Pipeline Cafe
+ï»¿# Pipeline Cafe
 
 Estrutura inicial do projeto com foco no backend.
 
 ## Pastas
 
 - `backend`: API Node.js + Express + TypeScript + Prisma + Jest/Supertest
-- `frontend`: configuração inicial React + Vite + TypeScript + Axios (sem features)
+- `frontend`: configuraÃ§Ã£o inicial React + Vite + TypeScript + Axios (sem features)
 
 ## Backend
 
@@ -15,12 +15,34 @@ npm install
 npm run dev
 ```
 
-Comandos úteis:
+Comandos Ãºteis:
 
 ```bash
 npm run build
 npm test
 npm run test:coverage
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+### PostgreSQL (Docker)
+
+Subir somente o banco:
+
+```bash
+docker compose up -d postgres
+```
+
+Parar o banco:
+
+```bash
+docker compose stop postgres
+```
+
+Primeiro uso do Prisma com banco ativo:
+
+```bash
+cd backend
 npm run prisma:generate
 npm run prisma:migrate
 ```
@@ -33,14 +55,14 @@ npm install
 npm run dev
 ```
 
-Comandos úteis:
+Comandos Ãºteis:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Observações
+## ObservaÃ§Ãµes
 
 - Arquivo de exemplo de ambiente do backend: `backend/.env.example`
 - Schema Prisma inicial: `backend/prisma/schema.prisma`
