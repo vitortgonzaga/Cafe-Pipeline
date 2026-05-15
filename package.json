@@ -1,0 +1,13 @@
+{
+  "name": "cafepipeline",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "test": "npm --prefix backend run test",
+    "test:coverage": "npm --prefix backend run test:coverage",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix backend run typecheck:test && npm --prefix frontend run typecheck"
+  }
+}
