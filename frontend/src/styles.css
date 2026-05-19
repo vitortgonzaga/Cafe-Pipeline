@@ -1,0 +1,141 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Figtree:wght@300;400;500;600&display=swap");
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-cream: var(--cream);
+  --color-brass: var(--brass);
+  --color-espresso: var(--espresso);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", "Figtree", sans-serif;
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Espresso Escuro palette: #1a0f0a / #3d2418 / #a87454 / #e8d5b7 */
+  --espresso: #1a0f0a;
+  --background: #1a0f0a;
+  --foreground: #e8d5b7;
+  --cream: #e8d5b7;
+  --brass: #a87454;
+  --card: #3d2418;
+  --card-foreground: #e8d5b7;
+  --popover: #3d2418;
+  --popover-foreground: #e8d5b7;
+  --primary: #a87454;
+  --primary-foreground: #1a0f0a;
+  --secondary: #4a2e1f;
+  --secondary-foreground: #e8d5b7;
+  --muted: #2a1812;
+  --muted-foreground: #a87454;
+  --accent: #c28b6a;
+  --accent-foreground: #1a0f0a;
+  --destructive: #c94a3d;
+  --destructive-foreground: #fef2f0;
+  --border: rgba(168, 116, 84, 0.18);
+  --input: #1a0f0a;
+  --ring: #a87454;
+  --success: #6fa86f;
+  --warning: #d99b54;
+  --danger: #c94a3d;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    background-image:
+      radial-gradient(at 15% 0%, rgba(168, 116, 84, 0.1), transparent 55%),
+      radial-gradient(at 90% 100%, rgba(168, 116, 84, 0.06), transparent 50%);
+    background-attachment: fixed;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .text-brass {
+    color: var(--brass);
+  }
+  .bg-brass {
+    background-color: var(--brass);
+  }
+  .text-cream {
+    color: var(--cream);
+  }
+  .border-brass {
+    border-color: var(--brass);
+  }
+  .text-success {
+    color: var(--success);
+  }
+  .text-warning {
+    color: var(--warning);
+  }
+  .text-danger {
+    color: var(--danger);
+  }
+  .bg-success\/10 {
+    background-color: rgba(111, 168, 111, 0.12);
+  }
+  .bg-warning\/10 {
+    background-color: rgba(217, 155, 84, 0.12);
+  }
+  .bg-danger\/10 {
+    background-color: rgba(201, 74, 61, 0.12);
+  }
+  .border-success\/30 {
+    border-color: rgba(111, 168, 111, 0.35);
+  }
+  .border-warning\/30 {
+    border-color: rgba(217, 155, 84, 0.35);
+  }
+  .border-danger\/30 {
+    border-color: rgba(201, 74, 61, 0.35);
+  }
+  .label-eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--brass);
+    font-weight: 700;
+  }
+}

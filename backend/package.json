@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "cafe-pipeline-backend",
   "version": "1.0.0",
   "description": "Pipeline Cafe backend",
   "main": "dist/server.js",
