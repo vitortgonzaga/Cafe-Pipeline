@@ -82,9 +82,7 @@ export function PipelineCafePage() {
   const [movResp, setMovResp] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
 
-  const { movements, isLoading: isLoadingMovements } = useAllMovements(
-    tab === "movements" ? items : [],
-  );
+  const { movements, isLoading: isLoadingMovements } = useAllMovements(items);
 
   const notify = (msg: string, kind: "ok" | "err" = "ok") => {
     setToast({ msg, kind });
@@ -242,10 +240,10 @@ export function PipelineCafePage() {
               />
             </svg>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-cream">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-cream cursor-default">
             PIPELINE CAFÉ
           </h1>
-          <p className="label-eyebrow">Especialidade em sobrevivência ao deploy</p>
+          <p className="label-eyebrow cursor-default">Especialidade em sobrevivência ao deploy</p>
         </header>
 
         {loadError && (
@@ -332,8 +330,11 @@ export function PipelineCafePage() {
                     type="number"
                     min={0}
                     className="cf-input"
-                    value={form.quantity}
-                    onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
+                    value={form.quantity === 0 ? "" : form.quantity}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setForm({ ...form, quantity: value === "" ? 0 : Number(value) });
+                    }}
                   />
                 </FormField>
                 <FormField label="Estoque Mínimo" span={2}>
@@ -341,8 +342,11 @@ export function PipelineCafePage() {
                     type="number"
                     min={0}
                     className="cf-input"
-                    value={form.minQuantity}
-                    onChange={(e) => setForm({ ...form, minQuantity: Number(e.target.value) })}
+                    value={form.minQuantity === 0 ? "" : form.minQuantity}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setForm({ ...form, minQuantity: value === "" ? 0 : Number(value) });
+                    }}
                   />
                 </FormField>
                 <FormField label="Criticidade" span={2}>
@@ -725,13 +729,13 @@ function ItemRow({
       ? "border-l-danger"
       : item.status === "LOW_STOCK"
         ? "border-l-warning"
-        : "border-l-brass";
+        : "border-l-success";
   const qtyColor =
     item.status === "OUT_OF_STOCK"
       ? "text-danger"
       : item.status === "LOW_STOCK"
         ? "text-warning"
-        : "text-cream";
+        : "text-success";
 
   return (
     <div
@@ -841,7 +845,9 @@ function Report({
 }) {
   const accent = tone === "warning" ? "border-l-warning" : "border-l-danger";
   return (
-    <div className={`bg-card rounded-xl border border-border border-l-4 ${accent} p-6`}>
+    <div
+      className={` max-h-144 overflow-y-auto bg-card rounded-xl border border-border border-l-4 ${accent} p-6`}
+    >
       <h3 className="text-base font-semibold mb-4 text-cream flex items-center gap-2">
         <span>{icon}</span> {title}
         <span className="label-eyebrow ml-auto">{items.length}</span>
