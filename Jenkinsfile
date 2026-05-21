@@ -9,6 +9,7 @@ pipeline {
     stage('Install') {
       steps {
         sh 'npm --prefix backend ci'
+        sh 'npm --prefix backend run prisma:generate'
         sh 'npm --prefix frontend ci'
       }
     }
