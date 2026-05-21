@@ -1,10 +1,5 @@
 pipeline {
-  agent {
-    docker {
-      image 'node:20-alpine'
-      args '-u root:root'
-    }
-  }
+  agent any
 
   options {
     timestamps()
