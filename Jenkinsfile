@@ -10,7 +10,6 @@ pipeline {
       steps {
         sh 'npm --prefix backend ci'
         sh 'npm --prefix backend run prisma:generate'
-        sh 'npm --prefix frontend ci'
       }
     }
 
@@ -23,7 +22,6 @@ pipeline {
     stage('Build') {
       steps {
         sh 'npm --prefix backend run build'
-        sh 'npm --prefix frontend run build'
       }
     }
   }
