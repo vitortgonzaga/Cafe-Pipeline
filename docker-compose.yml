@@ -26,5 +26,20 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  jenkins:
+    build:
+      context: ./jenkins
+      dockerfile: Dockerfile
+    container_name: pipeline-cafe-jenkins
+    restart: unless-stopped
+    user: root
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./:/workspace
+
 volumes:
   postgres_data:
+  jenkins_home:

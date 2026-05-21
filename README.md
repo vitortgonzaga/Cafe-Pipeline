@@ -1,67 +1,83 @@
-﻿# Pipeline Cafe
+# Pipeline Cafe
 
-Estrutura inicial do projeto com foco no backend.
+Sistema de controle de estoque para uma cafeteria temática DevOps.
 
-## Pastas
+## Funcionalidades
 
-- `backend`: API Node.js + Express + TypeScript + Prisma + Jest/Supertest
-- `frontend`: React + TanStack Start/Router + TanStack React Query + Axios, organizado em camadas (DDD: http / domain / data / application / presentation)
+- Cadastro, listagem, busca, atualização e remoção de itens de estoque
+- Entrada e saída de estoque com validações de negócio
+- Histórico de movimentações por item
+- Relatório de itens com baixo estoque
+- Relatório de itens zerados
+- Endpoint de saúde da aplicação (`/health`)
 
-## Backend
+## Instalação
+
+### Pré-requisitos
+
+- Node.js 20+
+- npm 10+
+- Docker e Docker Compose
+
+### Clonar e instalar dependências
 
 ```bash
-cd backend
+git clone <url-do-repositorio>
+cd CafePipeline
 npm install
-npm run dev
+cd backend && npm ci
+cd ../frontend && npm ci
 ```
 
-Comandos úteis:
+## Execução
 
-```bash
-npm run build
-npm test
-npm run test:coverage
-npm run prisma:generate
-npm run prisma:migrate
-```
-
-### PostgreSQL (Docker)
-
-Subir somente o banco:
+### 1) Subir o PostgreSQL
 
 ```bash
 docker compose up -d postgres
 ```
 
-Parar o banco:
-
-```bash
-docker compose stop postgres
-```
-
-Primeiro uso do Prisma com banco ativo:
+### 2) Configurar backend
 
 ```bash
 cd backend
+cp .env.example .env
 npm run prisma:generate
 npm run prisma:migrate
+npm run dev
 ```
 
-## Frontend
+### 3) Subir frontend (em outro terminal)
 
 ```bash
 cd frontend
-bun install   # ou npm install
-bun run dev   # ou npm run dev
+npm run dev
 ```
+
+## Uso
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3001`
+- Health check: `GET http://localhost:3001/health`
+- Base da API: `http://localhost:3001/api`
+
+Configuração do frontend:
+- Variável `VITE_API_URL` (padrão: `http://localhost:3001/api`)
+
+## Docker Compose
+
+Serviços atualmente definidos:
+
+- `backend` (build local via `backend/Dockerfile`)
+- `postgres` (imagem `postgres:16-alpine`)
 
 Comandos úteis:
 
 ```bash
-bun run build
-bun run preview
-bun run typecheck
-bun run lint
+docker compose up -d
+docker compose ps
+docker compose logs -f backend
+docker compose down
 ```
 
 ### Testes (Vitest)
@@ -101,20 +117,22 @@ Após `bun run test`, o reporter HTML gera um relatório em `frontend/html/`
 A URL da API consumida pelo frontend pode ser configurada via variável de ambiente
 `VITE_API_URL` (padrão: `http://localhost:3001/api`).
 
-### Estrutura de camadas (frontend)
+Executar testes do backend:
 
-- `src/http`: abstração do cliente HTTP (`HttpClient`) e implementação com Axios
-  (`AxiosHttpClient`)
-- `src/domain/items`: entidades de negócio (`CafeItem`, `StockMovement`), enums e
-  constantes
-- `src/data/items`: DTOs de request/response, mappers e repositório HTTP
-  (`ItemHttpRepository` implementando `IItemRepository`)
-- `src/application/items`: serviços/casos de uso (`ItemService`) — compõe o
-  repositório e expõe a API ao mundo de UI
-- `src/presentation`: hooks de React Query (queries e mutations) e páginas que
-  consomem os hooks
+```bash
+cd backend
+npm test
+```
 
-## Observações
+Gerar cobertura:
 
-- Arquivo de exemplo de ambiente do backend: `backend/.env.example`
-- Schema Prisma inicial: `backend/prisma/schema.prisma`
+```bash
+cd backend
+npm run test:coverage
+```
+
+Relatórios gerados:
+
+- `backend/coverage/lcov-report/index.html`
+- `backend/coverage/lcov.info`
+- `backend/coverage/coverage-final.json`

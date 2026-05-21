@@ -12,3 +12,5 @@ frontend/node_modules/
 frontend/dist/
 *.tsbuildinfo
 ideia-pipeline-cafe.md
+AGENTS.md
+architeture.md

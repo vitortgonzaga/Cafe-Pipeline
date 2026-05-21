@@ -10,6 +10,7 @@
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "start": "node dist/server.js",
     "test": "jest --runInBand",
+    "test:ci": "jest --runInBand --json --outputFile=./test-results/jest-results.json",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",

@@ -17,5 +17,7 @@ router.delete("/items/:id", itemController.delete);
 router.post("/items/:id/movements/in", itemController.addStock);
 router.post("/items/:id/movements/out", itemController.consumeStock);
 router.get("/items/:id/movements", itemController.listMovements);
+router.get("/reports/low-stock", itemController.listLowStock);
+router.get("/reports/out-of-stock", itemController.listOutOfStock);
 
 export { router as itemRoutes };

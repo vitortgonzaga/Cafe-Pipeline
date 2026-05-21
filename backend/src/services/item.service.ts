@@ -106,4 +106,12 @@ export class ItemService {
 
     return this.repository.listMovements(itemId);
   }
+
+  async listLowStock() {
+    return this.repository.findLowStock();
+  }
+
+  async listOutOfStock() {
+    return this.repository.findOutOfStock();
+  }
 }
