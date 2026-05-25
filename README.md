@@ -64,6 +64,40 @@ bun run typecheck
 bun run lint
 ```
 
+### Testes (Vitest)
+
+Os testes ficam em `frontend/src` com sufixo `.spec.ts(x)` (unitários) ou
+`.test.ts(x)` (integração). Use `npm` no lugar de `bun` se preferir.
+
+```bash
+cd frontend
+
+# Executa a suíte uma vez e encerra
+bun run test
+
+# Modo watch (reexecuta ao salvar arquivos)
+bun run test:watch
+
+# Cobertura de código (relatório em frontend/coverage)
+bun run test:coverage
+```
+
+Comandos adicionais via CLI do Vitest:
+
+```bash
+# Um arquivo ou pasta específica
+bunx vitest run src/http/axios-http-client.spec.ts
+
+# Filtrar por nome do teste (describe/it)
+bunx vitest run -t "AxiosHttpClient"
+
+# Interface visual no navegador (@vitest/ui)
+bunx vitest --ui
+```
+
+Após `bun run test`, o reporter HTML gera um relatório em `frontend/html/`
+(abra `frontend/html/index.html` no navegador).
+
 A URL da API consumida pelo frontend pode ser configurada via variável de ambiente
 `VITE_API_URL` (padrão: `http://localhost:3001/api`).
 

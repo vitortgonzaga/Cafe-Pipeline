@@ -16,3 +16,4 @@ export const httpClient: HttpClient = new AxiosHttpClient({
 export type { HttpClient, HttpRequest, HttpResponse, HttpMethod } from "./http-client";
 export { HttpError } from "./http-error";
 export { AxiosHttpClient } from "./axios-http-client";
+export { resolveBaseUrl };
