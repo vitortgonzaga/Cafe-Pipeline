@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { CafeItem, ItemStatus, MovementType, StockMovement } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import type { CreateItemInput, UpdateItemInput } from "../types/item.types";
@@ -76,7 +77,7 @@ export class ItemRepository {
 
     const nextStatus = calculateItemStatus(nextQuantity, item.minQuantity);
 
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const updatedItem = await tx.cafeItem.update({
         where: { id: item.id },
         data: {
