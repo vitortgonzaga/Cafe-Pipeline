@@ -23,9 +23,9 @@ install_node() {
       ;;
   esac
 
-  local archive="node-v${NODE_VERSION}-linux-${node_arch}.tar.xz"
+  local archive="node-v${NODE_VERSION}-linux-${node_arch}.tar.gz"
   curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/${archive}" \
-    | tar -xJ -C "${NODE_DIR}" --strip-components=1
+    | tar -xz -C "${NODE_DIR}" --strip-components=1
 }
 
 install_curl() {
@@ -43,8 +43,8 @@ install_curl() {
   exit 1
 }
 
-install_node
 install_curl
+install_node
 
 cat > "${WORKSPACE}/.jenkins-env" <<EOF
 export PATH="${NODE_DIR}/bin:\${PATH}"
