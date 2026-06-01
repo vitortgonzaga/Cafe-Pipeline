@@ -44,8 +44,10 @@ URL: ${PIPELINE_URL}
 
 Artifacts:
 - frontend-package.tar.gz
-- coverage report (frontend/coverage)
-- test report (frontend/html)
+- backend-package.tar.gz
+- frontend coverage report (frontend/coverage)
+- backend coverage report (backend/coverage)
+- frontend test report/build output (frontend/html)
 EOF
 )
 

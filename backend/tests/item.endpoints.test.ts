@@ -13,6 +13,7 @@ const mockPrisma = {
     findMany: jest.fn(),
   },
   $transaction: jest.fn(),
+  $queryRaw: jest.fn(),
 };
 
 jest.mock("../src/lib/prisma", () => ({
@@ -30,6 +31,7 @@ describe("Item endpoints", () => {
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
       return callback(mockPrisma);
     });
+    mockPrisma.$queryRaw.mockResolvedValueOnce([{ "?column?": 1 }]);
   });
 
   it("returns 400 with clear payload for invalid item id", async () => {
@@ -239,7 +241,7 @@ describe("Item endpoints", () => {
   it("returns health status", async () => {
     const response = await request(app).get("/health");
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ status: "ok" });
+    expect(response.body).toEqual({ status: "ok", db: "ok" });
   });
 
   it("creates and lists items", async () => {

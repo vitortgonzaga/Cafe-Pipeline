@@ -67,7 +67,7 @@ pipeline {
                                 sh '''
                                     set -euo pipefail
                                     . "${WORKSPACE}/.jenkins-env"
-                                    npm run test
+                                    npm run test:coverage
                                 '''
                             }
                         }
@@ -102,6 +102,7 @@ pipeline {
                                     npm run build
                                 '''
                             }
+                            sh 'bash infra/scripts/package-backend.sh'
                         }
                     }
                 }
@@ -124,7 +125,7 @@ pipeline {
     post {
         always {
             archiveArtifacts(
-                artifacts: 'artifacts/frontend-package.tar.gz, frontend/coverage/**, frontend/html/**, backend/dist/**',
+                artifacts: 'artifacts/frontend-package.tar.gz, artifacts/backend-package.tar.gz, frontend/coverage/**, frontend/html/**, backend/coverage/**',
                 fingerprint: true,
                 allowEmptyArchive: true
             )
