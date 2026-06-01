@@ -7,11 +7,25 @@ set -euo pipefail
 : "${SMTP_PASS:?SMTP_PASS environment variable is required}"
 
 SMTP_PORT="${SMTP_PORT:-587}"
-SMTP_FROM="${SMTP_FROM:-jenkins@localhost}"
+SMTP_FROM="${SMTP_FROM:-${SMTP_USER}}"
 PIPELINE_STATUS="${PIPELINE_STATUS:-${BUILD_RESULT:-UNKNOWN}}"
 PIPELINE_JOB="${PIPELINE_JOB:-${JOB_NAME:-unknown-job}}"
 PIPELINE_BUILD="${PIPELINE_BUILD:-${BUILD_NUMBER:-0}}"
 PIPELINE_URL="${PIPELINE_URL:-${BUILD_URL:-N/A}}"
+
+# Port 465 uses implicit TLS (smtps://). Port 587 uses STARTTLS (smtp:// + --ssl-reqd).
+if [[ "${SMTP_SSL:-}" == "true" ]] || [[ "${SMTP_PORT}" == "465" ]]; then
+  SMTP_URL="smtps://${SMTP_HOST}:${SMTP_PORT}"
+  CURL_TLS_ARGS=()
+else
+  SMTP_URL="smtp://${SMTP_HOST}:${SMTP_PORT}"
+  CURL_TLS_ARGS=(--ssl-reqd)
+fi
+
+CURL_VERBOSE=()
+if [[ "${SMTP_DEBUG:-}" == "true" ]]; then
+  CURL_VERBOSE=(-v)
+fi
 
 if ! command -v curl >/dev/null 2>&1; then
   echo "curl is required to send notification emails." >&2
@@ -47,8 +61,11 @@ trap 'rm -f "${mail_file}"' EXIT
   printf '%s\r\n' "${body}"
 } > "${mail_file}"
 
-curl --silent --show-error --ssl-reqd \
-  --url "smtp://${SMTP_HOST}:${SMTP_PORT}" \
+curl "${CURL_VERBOSE[@]}" --silent --show-error \
+  "${CURL_TLS_ARGS[@]}" \
+  --connect-timeout 30 \
+  --max-time 120 \
+  --url "${SMTP_URL}" \
   --user "${SMTP_USER}:${SMTP_PASS}" \
   --mail-from "${SMTP_FROM}" \
   --mail-rcpt "${NOTIFICATION_EMAIL}" \

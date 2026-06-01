@@ -163,8 +163,21 @@ Configure no job (**Manage Jenkins** → **Credentials** / **Environment**):
 | `SMTP_HOST` | Sim | Servidor SMTP |
 | `SMTP_USER` | Sim | Usuário SMTP |
 | `SMTP_PASS` | Sim | Senha SMTP (recomendado: Jenkins Credentials) |
-| `SMTP_PORT` | Não | Porta SMTP (padrão: `587`) |
-| `SMTP_FROM` | Não | Remetente do e-mail (padrão: `jenkins@localhost`) |
+| `SMTP_PORT` | Não | Porta SMTP (padrão: `587` com STARTTLS; use `465` para SSL implícito) |
+| `SMTP_FROM` | Não | Remetente do e-mail (padrão: valor de `SMTP_USER`) |
+| `SMTP_SSL` | Não | Force `smtps://` mesmo fora da porta `465` (`true`/`false`) |
+| `SMTP_DEBUG` | Não | Ativa `curl -v` para diagnosticar falhas SMTP (`true`/`false`) |
+
+#### Exemplo: Gmail
+
+| Variável | Valor |
+| --- | --- |
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `465` |
+| `SMTP_USER` | seu e-mail `@gmail.com` |
+| `SMTP_PASS` | [senha de app](https://myaccount.google.com/apppasswords) (não a senha normal) |
+| `SMTP_FROM` | mesmo valor de `SMTP_USER` |
+| `NOTIFICATION_EMAIL` | destinatário da notificação |
 
 ## Observações
 
