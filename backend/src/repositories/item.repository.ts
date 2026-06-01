@@ -5,6 +5,31 @@ import type { CreateItemInput, UpdateItemInput } from "../types/item.types";
 import { calculateItemStatus } from "../services/item-status.service";
 
 export class ItemRepository {
+  private buildItemData(input: CreateItemInput | UpdateItemInput) {
+    return {
+      name: input.name,
+      category: input.category,
+      quantity: input.quantity,
+      minQuantity: input.minQuantity,
+      unit: input.unit,
+      criticality: input.criticality,
+      status: calculateItemStatus(input.quantity, input.minQuantity),
+    };
+  }
+
+  private buildMovementData(
+    itemId: string,
+    movement: { type: MovementType; quantity: number; reason: string; responsible: string },
+  ) {
+    return {
+      itemId,
+      type: movement.type,
+      quantity: movement.quantity,
+      reason: movement.reason,
+      responsible: movement.responsible,
+    };
+  }
+
   private async findByStatus(status: ItemStatus): Promise<CafeItem[]> {
     return prisma.cafeItem.findMany({
       where: { status },
@@ -16,15 +41,7 @@ export class ItemRepository {
 
   async create(input: CreateItemInput): Promise<CafeItem> {
     return prisma.cafeItem.create({
-      data: {
-        name: input.name,
-        category: input.category,
-        quantity: input.quantity,
-        minQuantity: input.minQuantity,
-        unit: input.unit,
-        criticality: input.criticality,
-        status: calculateItemStatus(input.quantity, input.minQuantity),
-      },
+      data: this.buildItemData(input),
     });
   }
 
@@ -45,15 +62,7 @@ export class ItemRepository {
   async update(id: string, input: UpdateItemInput): Promise<CafeItem> {
     return prisma.cafeItem.update({
       where: { id },
-      data: {
-        name: input.name,
-        category: input.category,
-        quantity: input.quantity,
-        minQuantity: input.minQuantity,
-        unit: input.unit,
-        criticality: input.criticality,
-        status: calculateItemStatus(input.quantity, input.minQuantity),
-      },
+      data: this.buildItemData(input),
     });
   }
 
@@ -87,13 +96,7 @@ export class ItemRepository {
       });
 
       await tx.stockMovement.create({
-        data: {
-          itemId: item.id,
-          type: movement.type,
-          quantity: movement.quantity,
-          reason: movement.reason,
-          responsible: movement.responsible,
-        },
+        data: this.buildMovementData(item.id, movement),
       });
 
       return updatedItem;
