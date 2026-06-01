@@ -1,9 +1,19 @@
-import type { CafeItem, MovementType, StockMovement } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import type { CafeItem, ItemStatus, MovementType, StockMovement } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import type { CreateItemInput, UpdateItemInput } from "../types/item.types";
 import { calculateItemStatus } from "../services/item-status.service";
 
 export class ItemRepository {
+  private async findByStatus(status: ItemStatus): Promise<CafeItem[]> {
+    return prisma.cafeItem.findMany({
+      where: { status },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
   async create(input: CreateItemInput): Promise<CafeItem> {
     return prisma.cafeItem.create({
       data: {
@@ -67,7 +77,7 @@ export class ItemRepository {
 
     const nextStatus = calculateItemStatus(nextQuantity, item.minQuantity);
 
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const updatedItem = await tx.cafeItem.update({
         where: { id: item.id },
         data: {
@@ -97,5 +107,13 @@ export class ItemRepository {
         createdAt: "desc",
       },
     });
+  }
+
+  async findLowStock(): Promise<CafeItem[]> {
+    return this.findByStatus("LOW_STOCK");
+  }
+
+  async findOutOfStock(): Promise<CafeItem[]> {
+    return this.findByStatus("OUT_OF_STOCK");
   }
 }

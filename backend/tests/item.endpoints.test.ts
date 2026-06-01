@@ -183,6 +183,52 @@ describe("Item endpoints", () => {
     expect(response.body[0].type).toBe("IN");
   });
 
+  it("lists low-stock items", async () => {
+    mockPrisma.cafeItem.findMany.mockResolvedValueOnce([
+      {
+        id: itemId,
+        name: "Cafe de Deploy",
+        category: "DEPLOY",
+        quantity: 1,
+        minQuantity: 2,
+        unit: "UNIT",
+        criticality: "HIGH",
+        status: "LOW_STOCK",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+
+    const response = await request(app).get("/api/reports/low-stock");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].status).toBe("LOW_STOCK");
+  });
+
+  it("lists out-of-stock items", async () => {
+    mockPrisma.cafeItem.findMany.mockResolvedValueOnce([
+      {
+        id: itemId,
+        name: "Cookie de Coverage",
+        category: "TESTING",
+        quantity: 0,
+        minQuantity: 2,
+        unit: "UNIT",
+        criticality: "MEDIUM",
+        status: "OUT_OF_STOCK",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+
+    const response = await request(app).get("/api/reports/out-of-stock");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].status).toBe("OUT_OF_STOCK");
+  });
+
   it("returns 404 for unknown route", async () => {
     const response = await request(app).get("/api/unknown");
 

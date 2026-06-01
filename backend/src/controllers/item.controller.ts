@@ -80,4 +80,22 @@ export class ItemController {
       next(error);
     }
   };
+
+  listLowStock = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const items = await this.service.listLowStock();
+      res.status(200).json(items);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  listOutOfStock = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const items = await this.service.listOutOfStock();
+      res.status(200).json(items);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
