@@ -24,6 +24,12 @@ pipeline {
             }
         }
 
+        stage('Install') {
+            steps {
+                sh 'bash infra/scripts/install-frontend-deps.sh'
+            }
+        }
+
         stage('Test') {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
@@ -31,7 +37,6 @@ pipeline {
                         sh '''
                             set -euo pipefail
                             . "${WORKSPACE}/.jenkins-env"
-                            npm ci
                             npm run test:coverage
                         '''
                     }
