@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-ssr
+.output
+.vinxi
+coverage
+html
+.git
+.gitignore
+*.md
+.env
+.env.*

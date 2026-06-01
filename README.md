@@ -30,12 +30,14 @@ npm run prisma:migrate
 Subir somente o banco:
 
 ```bash
+cd infra
 docker compose up -d postgres
 ```
 
 Parar o banco:
 
 ```bash
+cd infra
 docker compose stop postgres
 ```
 
@@ -101,6 +103,30 @@ Após `bun run test`, o reporter HTML gera um relatório em `frontend/html/`
 A URL da API consumida pelo frontend pode ser configurada via variável de ambiente
 `VITE_API_URL` (padrão: `http://localhost:3001/api`).
 
+### Imagem Docker (Docker Hub)
+
+Imagem publicada: [joaogabrielcosta/cafe-pipeline-frontend](https://hub.docker.com/r/joaogabrielcosta/cafe-pipeline-frontend)
+
+```bash
+docker pull joaogabrielcosta/cafe-pipeline-frontend:latest
+```
+
+Subir o frontend via Docker Compose (junto com backend e postgres):
+
+```bash
+cd infra
+docker compose up -d frontend
+```
+
+Subir toda a stack:
+
+```bash
+cd infra
+docker compose up -d
+```
+
+O frontend ficará disponível em `http://localhost:3000`.
+
 ### Estrutura de camadas (frontend)
 
 - `src/http`: abstração do cliente HTTP (`HttpClient`) e implementação com Axios
@@ -113,6 +139,32 @@ A URL da API consumida pelo frontend pode ser configurada via variável de ambie
   repositório e expõe a API ao mundo de UI
 - `src/presentation`: hooks de React Query (queries e mutations) e páginas que
   consomem os hooks
+
+## Jenkins
+
+O pipeline do frontend está definido no `Jenkinsfile` na raiz do repositório.
+Para subir o Jenkins localmente:
+
+```bash
+cd infra
+docker compose up -d jenkins
+```
+
+Acesse `http://localhost:8080` e crie um job do tipo **Pipeline** apontando para
+este repositório (script from SCM, caminho: `Jenkinsfile`).
+
+### Variáveis de ambiente no Jenkins
+
+Configure no job (**Manage Jenkins** → **Credentials** / **Environment**):
+
+| Variável | Obrigatória | Descrição |
+| --- | --- | --- |
+| `NOTIFICATION_EMAIL` | Sim | Destinatário do e-mail de notificação (não hardcoded no script) |
+| `SMTP_HOST` | Sim | Servidor SMTP |
+| `SMTP_USER` | Sim | Usuário SMTP |
+| `SMTP_PASS` | Sim | Senha SMTP (recomendado: Jenkins Credentials) |
+| `SMTP_PORT` | Não | Porta SMTP (padrão: `587`) |
+| `SMTP_FROM` | Não | Remetente do e-mail (padrão: `jenkins@localhost`) |
 
 ## Observações
 
