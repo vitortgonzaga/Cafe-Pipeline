@@ -45,6 +45,38 @@ pipeline {
             }
         }
 
+        stage('Typecheck') {
+            parallel {
+                stage('Typecheck Frontend') {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            dir('frontend') {
+                                sh '''
+                                    set -euo pipefail
+                                    . "${WORKSPACE}/.jenkins-env"
+                                    npm run typecheck
+                                '''
+                            }
+                        }
+                    }
+                }
+                stage('Typecheck Backend') {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            dir('backend') {
+                                sh '''
+                                    set -euo pipefail
+                                    . "${WORKSPACE}/.jenkins-env"
+                                    npm run typecheck
+                                    npm run typecheck:test
+                                '''
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Test') {
             parallel {
                 stage('Test Frontend') {
@@ -125,7 +157,7 @@ pipeline {
     post {
         always {
             archiveArtifacts(
-                artifacts: 'artifacts/frontend-package.tar.gz, artifacts/backend-package.tar.gz, frontend/coverage/**, frontend/html/**, backend/coverage/**',
+                artifacts: 'artifacts/frontend-package.tar.gz, artifacts/backend-package.tar.gz, frontend/coverage/**, frontend/html/**, backend/coverage/**, backend/test-results/**',
                 fingerprint: true,
                 allowEmptyArchive: true
             )
