@@ -25,36 +25,86 @@ pipeline {
         }
 
         stage('Install') {
-            steps {
-                sh 'bash infra/scripts/install-frontend-deps.sh'
+            parallel {
+                stage('Install Frontend') {
+                    steps {
+                        sh 'bash infra/scripts/install-frontend-deps.sh'
+                    }
+                }
+                stage('Install Backend') {
+                    steps {
+                        dir('backend') {
+                            sh '''
+                                set -euo pipefail
+                                . "${WORKSPACE}/.jenkins-env"
+                                npm ci
+                            '''
+                        }
+                    }
+                }
             }
         }
 
         stage('Test') {
-            steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    dir('frontend') {
-                        sh '''
-                            set -euo pipefail
-                            . "${WORKSPACE}/.jenkins-env"
-                            npm run test:coverage
-                        '''
+            parallel {
+                stage('Test Frontend') {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            dir('frontend') {
+                                sh '''
+                                    set -euo pipefail
+                                    . "${WORKSPACE}/.jenkins-env"
+                                    npm run test:coverage
+                                '''
+                            }
+                        }
+                    }
+                }
+                stage('Test Backend') {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            dir('backend') {
+                                sh '''
+                                    set -euo pipefail
+                                    . "${WORKSPACE}/.jenkins-env"
+                                    npm run test:coverage
+                                '''
+                            }
+                        }
                     }
                 }
             }
         }
 
         stage('Build') {
-            steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    dir('frontend') {
-                        sh '''
-                            set -euo pipefail
-                            . "${WORKSPACE}/.jenkins-env"
-                            npm run build
-                        '''
+            parallel {
+                stage('Build Frontend') {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            dir('frontend') {
+                                sh '''
+                                    set -euo pipefail
+                                    . "${WORKSPACE}/.jenkins-env"
+                                    npm run build
+                                '''
+                            }
+                            sh 'bash infra/scripts/package-frontend.sh'
+                        }
                     }
-                    sh 'bash infra/scripts/package-frontend.sh'
+                }
+                stage('Build Backend') {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            dir('backend') {
+                                sh '''
+                                    set -euo pipefail
+                                    . "${WORKSPACE}/.jenkins-env"
+                                    npm run build
+                                '''
+                            }
+                            sh 'bash infra/scripts/package-backend.sh'
+                        }
+                    }
                 }
             }
         }
@@ -75,7 +125,7 @@ pipeline {
     post {
         always {
             archiveArtifacts(
-                artifacts: 'artifacts/frontend-package.tar.gz, frontend/coverage/**, frontend/html/**',
+                artifacts: 'artifacts/frontend-package.tar.gz, artifacts/backend-package.tar.gz, frontend/coverage/**, frontend/html/**, backend/coverage/**',
                 fingerprint: true,
                 allowEmptyArchive: true
             )
