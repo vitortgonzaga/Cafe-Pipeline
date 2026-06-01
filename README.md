@@ -1,83 +1,69 @@
-# Pipeline Cafe
+﻿# Pipeline Cafe
 
-Sistema de controle de estoque para uma cafeteria temática DevOps.
+Estrutura inicial do projeto com foco no backend.
 
-## Funcionalidades
+## Pastas
 
-- Cadastro, listagem, busca, atualização e remoção de itens de estoque
-- Entrada e saída de estoque com validações de negócio
-- Histórico de movimentações por item
-- Relatório de itens com baixo estoque
-- Relatório de itens zerados
-- Endpoint de saúde da aplicação (`/health`)
+- `backend`: API Node.js + Express + TypeScript + Prisma + Jest/Supertest
+- `frontend`: React + TanStack Start/Router + TanStack React Query + Axios, organizado em camadas (DDD: http / domain / data / application / presentation)
 
-## Instalação
-
-### Pré-requisitos
-
-- Node.js 20+
-- npm 10+
-- Docker e Docker Compose
-
-### Clonar e instalar dependências
-
-```bash
-git clone <url-do-repositorio>
-cd CafePipeline
-npm install
-cd backend && npm ci
-cd ../frontend && npm ci
-```
-
-## Execução
-
-### 1) Subir o PostgreSQL
-
-```bash
-docker compose up -d postgres
-```
-
-### 2) Configurar backend
+## Backend
 
 ```bash
 cd backend
-cp .env.example .env
-npm run prisma:generate
-npm run prisma:migrate
+npm install
 npm run dev
 ```
-
-### 3) Subir frontend (em outro terminal)
-
-```bash
-cd frontend
-npm run dev
-```
-
-## Uso
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:3001`
-- Health check: `GET http://localhost:3001/health`
-- Base da API: `http://localhost:3001/api`
-
-Configuração do frontend:
-- Variável `VITE_API_URL` (padrão: `http://localhost:3001/api`)
-
-## Docker Compose
-
-Serviços atualmente definidos:
-
-- `backend` (build local via `backend/Dockerfile`)
-- `postgres` (imagem `postgres:16-alpine`)
 
 Comandos úteis:
 
 ```bash
-docker compose up -d
-docker compose ps
-docker compose logs -f backend
-docker compose down
+npm run build
+npm test
+npm run test:coverage
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+### PostgreSQL (Docker)
+
+Subir somente o banco:
+
+```bash
+cd infra
+docker compose up -d postgres
+```
+
+Parar o banco:
+
+```bash
+cd infra
+docker compose stop postgres
+```
+
+Primeiro uso do Prisma com banco ativo:
+
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+## Frontend
+
+```bash
+cd frontend
+bun install   # ou npm install
+bun run dev   # ou npm run dev
+```
+
+Comandos úteis:
+
+```bash
+bun run build
+bun run preview
+bun run typecheck
+bun run lint
 ```
 
 ### Testes (Vitest)
@@ -117,22 +103,83 @@ Após `bun run test`, o reporter HTML gera um relatório em `frontend/html/`
 A URL da API consumida pelo frontend pode ser configurada via variável de ambiente
 `VITE_API_URL` (padrão: `http://localhost:3001/api`).
 
-Executar testes do backend:
+### Imagem Docker (Docker Hub)
+
+Imagem publicada: [joaogabrielcosta/cafe-pipeline-frontend](https://hub.docker.com/r/joaogabrielcosta/cafe-pipeline-frontend)
 
 ```bash
-cd backend
-npm test
+docker pull joaogabrielcosta/cafe-pipeline-frontend:latest
 ```
 
-Gerar cobertura:
+Subir o frontend via Docker Compose (junto com backend e postgres):
 
 ```bash
-cd backend
-npm run test:coverage
+cd infra
+docker compose up -d frontend
 ```
 
-Relatórios gerados:
+Subir toda a stack:
 
-- `backend/coverage/lcov-report/index.html`
-- `backend/coverage/lcov.info`
-- `backend/coverage/coverage-final.json`
+```bash
+cd infra
+docker compose up -d
+```
+
+O frontend ficará disponível em `http://localhost:3000`.
+
+### Estrutura de camadas (frontend)
+
+- `src/http`: abstração do cliente HTTP (`HttpClient`) e implementação com Axios
+  (`AxiosHttpClient`)
+- `src/domain/items`: entidades de negócio (`CafeItem`, `StockMovement`), enums e
+  constantes
+- `src/data/items`: DTOs de request/response, mappers e repositório HTTP
+  (`ItemHttpRepository` implementando `IItemRepository`)
+- `src/application/items`: serviços/casos de uso (`ItemService`) — compõe o
+  repositório e expõe a API ao mundo de UI
+- `src/presentation`: hooks de React Query (queries e mutations) e páginas que
+  consomem os hooks
+
+## Jenkins
+
+O pipeline do frontend está definido no `Jenkinsfile` na raiz do repositório.
+Para subir o Jenkins localmente:
+
+```bash
+cd infra
+docker compose up -d jenkins
+```
+
+Acesse `http://localhost:8080` e crie um job do tipo **Pipeline** apontando para
+este repositório (script from SCM, caminho: `Jenkinsfile`).
+
+### Variáveis de ambiente no Jenkins
+
+Configure no job (**Manage Jenkins** → **Credentials** / **Environment**):
+
+| Variável | Obrigatória | Descrição |
+| --- | --- | --- |
+| `NOTIFICATION_EMAIL` | Sim | Destinatário do e-mail de notificação (não hardcoded no script) |
+| `SMTP_HOST` | Sim | Servidor SMTP |
+| `SMTP_USER` | Sim | Usuário SMTP |
+| `SMTP_PASS` | Sim | Senha SMTP (recomendado: Jenkins Credentials) |
+| `SMTP_PORT` | Não | Porta SMTP (padrão: `587` com STARTTLS; use `465` para SSL implícito) |
+| `SMTP_FROM` | Não | Remetente do e-mail (padrão: valor de `SMTP_USER`) |
+| `SMTP_SSL` | Não | Force `smtps://` mesmo fora da porta `465` (`true`/`false`) |
+| `SMTP_DEBUG` | Não | Ativa `curl -v` para diagnosticar falhas SMTP (`true`/`false`) |
+
+#### Exemplo: Gmail
+
+| Variável | Valor |
+| --- | --- |
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `465` |
+| `SMTP_USER` | seu e-mail `@gmail.com` |
+| `SMTP_PASS` | [senha de app](https://myaccount.google.com/apppasswords) (não a senha normal) |
+| `SMTP_FROM` | mesmo valor de `SMTP_USER` |
+| `NOTIFICATION_EMAIL` | destinatário da notificação |
+
+## Observações
+
+- Arquivo de exemplo de ambiente do backend: `backend/.env.example`
+- Schema Prisma inicial: `backend/prisma/schema.prisma`

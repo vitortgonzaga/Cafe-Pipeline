@@ -2,9 +2,6 @@
   "name": "cafepipeline",
   "private": true,
   "version": "1.0.0",
-  "dependencies": {
-    "nodemailer": "^7.0.10"
-  },
   "scripts": {
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
