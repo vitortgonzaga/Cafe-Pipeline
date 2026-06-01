@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { ItemService } from "../services/item.service";
+import { asyncHandler } from "../helpers/async-handler";
 
 export class ItemController {
   constructor(private readonly service: ItemService) {}
@@ -9,93 +10,53 @@ export class ItemController {
     return Array.isArray(id) ? id[0] : id;
   }
 
-  create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const item = await this.service.create(req.body);
-      res.status(201).json(item);
-    } catch (error) {
-      next(error);
-    }
-  };
+  create = asyncHandler(async (req: Request, res: Response) => {
+    const item = await this.service.create(req.body);
+    res.status(201).json(item);
+  });
 
-  list = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const items = await this.service.list();
-      res.status(200).json(items);
-    } catch (error) {
-      next(error);
-    }
-  };
+  list = asyncHandler(async (_req: Request, res: Response) => {
+    const items = await this.service.list();
+    res.status(200).json(items);
+  });
 
-  getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const item = await this.service.getById(this.getIdParam(req));
-      res.status(200).json(item);
-    } catch (error) {
-      next(error);
-    }
-  };
+  getById = asyncHandler(async (req: Request, res: Response) => {
+    const item = await this.service.getById(this.getIdParam(req));
+    res.status(200).json(item);
+  });
 
-  update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const item = await this.service.update(this.getIdParam(req), req.body);
-      res.status(200).json(item);
-    } catch (error) {
-      next(error);
-    }
-  };
+  update = asyncHandler(async (req: Request, res: Response) => {
+    const item = await this.service.update(this.getIdParam(req), req.body);
+    res.status(200).json(item);
+  });
 
-  delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await this.service.delete(this.getIdParam(req));
-      res.status(204).send();
-    } catch (error) {
-      next(error);
-    }
-  };
+  delete = asyncHandler(async (req: Request, res: Response) => {
+    await this.service.delete(this.getIdParam(req));
+    res.status(204).send();
+  });
 
-  addStock = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const item = await this.service.addStock(this.getIdParam(req), req.body);
-      res.status(200).json(item);
-    } catch (error) {
-      next(error);
-    }
-  };
+  addStock = asyncHandler(async (req: Request, res: Response) => {
+    const item = await this.service.addStock(this.getIdParam(req), req.body);
+    res.status(200).json(item);
+  });
 
-  consumeStock = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const item = await this.service.consumeStock(this.getIdParam(req), req.body);
-      res.status(200).json(item);
-    } catch (error) {
-      next(error);
-    }
-  };
+  consumeStock = asyncHandler(async (req: Request, res: Response) => {
+    const item = await this.service.consumeStock(this.getIdParam(req), req.body);
+    res.status(200).json(item);
+  });
 
-  listMovements = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const movements = await this.service.listMovements(this.getIdParam(req));
-      res.status(200).json(movements);
-    } catch (error) {
-      next(error);
-    }
-  };
+  listMovements = asyncHandler(async (req: Request, res: Response) => {
+    const movements = await this.service.listMovements(this.getIdParam(req));
+    res.status(200).json(movements);
+  });
 
-  listLowStock = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const items = await this.service.listLowStock();
-      res.status(200).json(items);
-    } catch (error) {
-      next(error);
-    }
-  };
+  listLowStock = asyncHandler(async (_req: Request, res: Response) => {
+    const items = await this.service.listLowStock();
+    res.status(200).json(items);
+  });
 
-  listOutOfStock = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const items = await this.service.listOutOfStock();
-      res.status(200).json(items);
-    } catch (error) {
-      next(error);
-    }
-  };
+  listOutOfStock = asyncHandler(async (_req: Request, res: Response) => {
+    const items = await this.service.listOutOfStock();
+    res.status(200).json(items);
+  });
 }
