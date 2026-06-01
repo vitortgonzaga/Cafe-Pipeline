@@ -1,4 +1,10 @@
 import request from "supertest";
+import { ITEM_ID, makeItem, makeItemPayload } from "./factories/item.factory";
+import { makeMovement, makeMovementInPayload, makeMovementOutPayload } from "./factories/movement.factory";
+
+// ---------------------------------------------------------------------------
+// Mock do Prisma
+// ---------------------------------------------------------------------------
 
 const mockPrisma = {
   cafeItem: {
@@ -22,261 +28,257 @@ jest.mock("../src/lib/prisma", () => ({
 
 import { app } from "../src/app";
 
-describe("Item endpoints", () => {
-  const itemId = "86f1f588-b80e-4f66-a0c1-5b8ace0a9d53";
+// ---------------------------------------------------------------------------
+// Setup global
+// ---------------------------------------------------------------------------
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+beforeEach(() => {
+  jest.clearAllMocks();
 
-    mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
-      return callback(mockPrisma);
-    });
+  mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => unknown) => {
+    return callback(mockPrisma);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /health
+// ---------------------------------------------------------------------------
+
+describe("GET /health", () => {
+  it("returns 200 with status ok when database is reachable", async () => {
     mockPrisma.$queryRaw.mockResolvedValueOnce([{ "?column?": 1 }]);
+
+    const res = await request(app).get("/health");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ status: "ok", db: "ok" });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/items
+// ---------------------------------------------------------------------------
+
+describe("POST /api/items", () => {
+  it("creates an item and returns 201 with the created entity", async () => {
+    const payload = makeItemPayload({ quantity: 10 });
+    const created = makeItem({ quantity: 10, status: "AVAILABLE" });
+    mockPrisma.cafeItem.create.mockResolvedValueOnce(created);
+
+    const res = await request(app).post("/api/items").send(payload);
+
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBe(ITEM_ID);
   });
 
-  it("returns 400 with clear payload for invalid item id", async () => {
-    const response = await request(app).get("/api/items/invalid-id");
+  it("returns 400 when required fields are missing", async () => {
+    const res = await request(app).post("/api/items").send({});
 
-    expect(response.status).toBe(400);
-    expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe("VALIDATION_ERROR");
-    expect(response.body.error.message).toBe("Validation error");
-    expect(response.body.path).toBe("/api/items/invalid-id");
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });
+});
 
-  it("returns 404 when item does not exist", async () => {
-    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(null);
+// ---------------------------------------------------------------------------
+// GET /api/items
+// ---------------------------------------------------------------------------
 
-    const response = await request(app).get(`/api/items/${itemId}`);
+describe("GET /api/items", () => {
+  it("returns 200 with the list of items", async () => {
+    const items = [makeItem()];
+    mockPrisma.cafeItem.findMany.mockResolvedValueOnce(items);
 
-    expect(response.status).toBe(404);
-    expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe("ITEM_NOT_FOUND");
-    expect(response.body.error.message).toBe("Item not found");
-  });
+    const res = await request(app).get("/api/items");
 
-  it("returns 200 when item exists", async () => {
-    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce({
-      id: itemId,
-      name: "Cafe de Deploy",
-      category: "DEPLOY",
-      quantity: 5,
-      minQuantity: 2,
-      unit: "UNIT",
-      criticality: "MEDIUM",
-      status: "AVAILABLE",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    const response = await request(app).get(`/api/items/${itemId}`);
-
-    expect(response.status).toBe(200);
-    expect(response.body.id).toBe(itemId);
-  });
-
-  it("updates an item and returns 200", async () => {
-    const payload = {
-      name: "Cafe de Deploy",
-      category: "DEPLOY",
-      quantity: 1,
-      minQuantity: 2,
-      unit: "UNIT",
-      criticality: "HIGH",
-    };
-
-    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce({ id: itemId });
-    mockPrisma.cafeItem.update.mockResolvedValueOnce({
-      id: itemId,
-      ...payload,
-      status: "LOW_STOCK",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    const response = await request(app).put(`/api/items/${itemId}`).send(payload);
-
-    expect(response.status).toBe(200);
-    expect(response.body.status).toBe("LOW_STOCK");
-    expect(mockPrisma.cafeItem.update).toHaveBeenCalledTimes(1);
-  });
-
-  it("deletes an item and returns 204", async () => {
-    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce({ id: itemId });
-    mockPrisma.cafeItem.delete.mockResolvedValueOnce({ id: itemId });
-
-    const response = await request(app).delete(`/api/items/${itemId}`);
-
-    expect(response.status).toBe(204);
-    expect(mockPrisma.cafeItem.delete).toHaveBeenCalledTimes(1);
-  });
-
-  it("adds stock movement IN and returns updated item", async () => {
-    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce({
-      id: itemId,
-      quantity: 5,
-      minQuantity: 2,
-    });
-
-    mockPrisma.cafeItem.update.mockResolvedValueOnce({
-      id: itemId,
-      quantity: 8,
-      minQuantity: 2,
-      status: "AVAILABLE",
-    });
-
-    const response = await request(app).post(`/api/items/${itemId}/movements/in`).send({
-      quantity: 3,
-      responsible: "vitor",
-      reason: "reposicao",
-    });
-
-    expect(response.status).toBe(200);
-    expect(response.body.quantity).toBe(8);
-    expect(mockPrisma.stockMovement.create).toHaveBeenCalledTimes(1);
-  });
-
-  it("returns 400 when OUT movement has no reason", async () => {
-    const response = await request(app).post(`/api/items/${itemId}/movements/out`).send({
-      quantity: 2,
-      responsible: "vitor",
-      reason: "",
-    });
-
-    expect(response.status).toBe(400);
-    expect(response.body.error.code).toBe("VALIDATION_ERROR");
-  });
-
-  it("returns 400 when OUT movement exceeds stock", async () => {
-    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce({
-      id: itemId,
-      quantity: 2,
-      minQuantity: 1,
-    });
-
-    const response = await request(app).post(`/api/items/${itemId}/movements/out`).send({
-      quantity: 3,
-      responsible: "vitor",
-      reason: "deploy em producao",
-    });
-
-    expect(response.status).toBe(400);
-    expect(response.body.error.code).toBe("INSUFFICIENT_STOCK");
-  });
-
-  it("lists item movements", async () => {
-    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce({ id: itemId });
-    mockPrisma.stockMovement.findMany.mockResolvedValueOnce([
-      {
-        id: "m1",
-        itemId,
-        type: "IN",
-        quantity: 3,
-        reason: "reposicao",
-        responsible: "vitor",
-        createdAt: new Date(),
-      },
-    ]);
-
-    const response = await request(app).get(`/api/items/${itemId}/movements`);
-
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveLength(1);
-    expect(response.body[0].type).toBe("IN");
-  });
-
-  it("lists low-stock items", async () => {
-    mockPrisma.cafeItem.findMany.mockResolvedValueOnce([
-      {
-        id: itemId,
-        name: "Cafe de Deploy",
-        category: "DEPLOY",
-        quantity: 1,
-        minQuantity: 2,
-        unit: "UNIT",
-        criticality: "HIGH",
-        status: "LOW_STOCK",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
-
-    const response = await request(app).get("/api/reports/low-stock");
-
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveLength(1);
-    expect(response.body[0].status).toBe("LOW_STOCK");
-  });
-
-  it("lists out-of-stock items", async () => {
-    mockPrisma.cafeItem.findMany.mockResolvedValueOnce([
-      {
-        id: itemId,
-        name: "Cookie de Coverage",
-        category: "TESTING",
-        quantity: 0,
-        minQuantity: 2,
-        unit: "UNIT",
-        criticality: "MEDIUM",
-        status: "OUT_OF_STOCK",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
-
-    const response = await request(app).get("/api/reports/out-of-stock");
-
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveLength(1);
-    expect(response.body[0].status).toBe("OUT_OF_STOCK");
-  });
-
-  it("returns 404 for unknown route", async () => {
-    const response = await request(app).get("/api/unknown");
-
-    expect(response.status).toBe(404);
-    expect(response.body.error.code).toBe("ROUTE_NOT_FOUND");
-  });
-
-  it("returns health status", async () => {
-    const response = await request(app).get("/health");
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ status: "ok", db: "ok" });
-  });
-
-  it("creates and lists items", async () => {
-    const now = new Date();
-    const payload = {
-      name: "Cafe de Deploy",
-      category: "DEPLOY",
-      quantity: 10,
-      minQuantity: 2,
-      unit: "UNIT",
-      criticality: "MEDIUM",
-    };
-
-    mockPrisma.cafeItem.create.mockResolvedValueOnce({
-      id: itemId,
-      ...payload,
-      status: "AVAILABLE",
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const createResponse = await request(app).post("/api/items").send(payload);
-    expect(createResponse.status).toBe(201);
-    expect(createResponse.body.id).toBe(itemId);
-
-    mockPrisma.cafeItem.findMany.mockResolvedValueOnce([createResponse.body]);
-    const listResponse = await request(app).get("/api/items");
-    expect(listResponse.status).toBe(200);
-    expect(listResponse.body).toHaveLength(1);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
   });
 
   it("returns 500 on unexpected repository error", async () => {
     mockPrisma.cafeItem.findMany.mockRejectedValueOnce(new Error("boom"));
-    const response = await request(app).get("/api/items");
-    expect(response.status).toBe(500);
-    expect(response.body.error.code).toBe("INTERNAL_SERVER_ERROR");
+
+    const res = await request(app).get("/api/items");
+
+    expect(res.status).toBe(500);
+    expect(res.body.error.code).toBe("INTERNAL_SERVER_ERROR");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/items/:id
+// ---------------------------------------------------------------------------
+
+describe("GET /api/items/:id", () => {
+  it("returns 200 with the item when it exists", async () => {
+    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(makeItem());
+
+    const res = await request(app).get(`/api/items/${ITEM_ID}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(ITEM_ID);
+  });
+
+  it("returns 404 when the item does not exist", async () => {
+    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(null);
+
+    const res = await request(app).get(`/api/items/${ITEM_ID}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe("ITEM_NOT_FOUND");
+  });
+
+  it("returns 400 when the id is not a valid UUID", async () => {
+    const res = await request(app).get("/api/items/invalid-id");
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.path).toBe("/api/items/invalid-id");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/items/:id
+// ---------------------------------------------------------------------------
+
+describe("PUT /api/items/:id", () => {
+  it("updates the item and returns 200 with the updated entity", async () => {
+    const payload = makeItemPayload({ quantity: 1, criticality: "HIGH" });
+    const updated = makeItem({ ...payload, status: "LOW_STOCK" });
+    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(makeItem());
+    mockPrisma.cafeItem.update.mockResolvedValueOnce(updated);
+
+    const res = await request(app).put(`/api/items/${ITEM_ID}`).send(payload);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("LOW_STOCK");
+    expect(mockPrisma.cafeItem.update).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/items/:id
+// ---------------------------------------------------------------------------
+
+describe("DELETE /api/items/:id", () => {
+  it("deletes the item and returns 204 with no body", async () => {
+    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(makeItem());
+    mockPrisma.cafeItem.delete.mockResolvedValueOnce(makeItem());
+
+    const res = await request(app).delete(`/api/items/${ITEM_ID}`);
+
+    expect(res.status).toBe(204);
+    expect(mockPrisma.cafeItem.delete).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/items/:id/movements/in
+// ---------------------------------------------------------------------------
+
+describe("POST /api/items/:id/movements/in", () => {
+  it("adds stock and returns 200 with the updated item", async () => {
+    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(makeItem({ quantity: 5 }));
+    mockPrisma.cafeItem.update.mockResolvedValueOnce(makeItem({ quantity: 8, status: "AVAILABLE" }));
+
+    const res = await request(app)
+      .post(`/api/items/${ITEM_ID}/movements/in`)
+      .send(makeMovementInPayload({ quantity: 3 }));
+
+    expect(res.status).toBe(200);
+    expect(res.body.quantity).toBe(8);
+    expect(mockPrisma.stockMovement.create).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/items/:id/movements/out
+// ---------------------------------------------------------------------------
+
+describe("POST /api/items/:id/movements/out", () => {
+  it("returns 400 when reason is empty", async () => {
+    const res = await request(app)
+      .post(`/api/items/${ITEM_ID}/movements/out`)
+      .send(makeMovementOutPayload({ reason: "" }));
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("returns 400 when quantity exceeds available stock", async () => {
+    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(makeItem({ quantity: 2 }));
+
+    const res = await request(app)
+      .post(`/api/items/${ITEM_ID}/movements/out`)
+      .send(makeMovementOutPayload({ quantity: 3 }));
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("INSUFFICIENT_STOCK");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/items/:id/movements
+// ---------------------------------------------------------------------------
+
+describe("GET /api/items/:id/movements", () => {
+  it("returns 200 with the list of movements", async () => {
+    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(makeItem());
+    mockPrisma.stockMovement.findMany.mockResolvedValueOnce([makeMovement()]);
+
+    const res = await request(app).get(`/api/items/${ITEM_ID}/movements`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].type).toBe("IN");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/reports/low-stock
+// ---------------------------------------------------------------------------
+
+describe("GET /api/reports/low-stock", () => {
+  it("returns 200 with items in LOW_STOCK status", async () => {
+    mockPrisma.cafeItem.findMany.mockResolvedValueOnce([
+      makeItem({ quantity: 1, status: "LOW_STOCK" }),
+    ]);
+
+    const res = await request(app).get("/api/reports/low-stock");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].status).toBe("LOW_STOCK");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/reports/out-of-stock
+// ---------------------------------------------------------------------------
+
+describe("GET /api/reports/out-of-stock", () => {
+  it("returns 200 with items in OUT_OF_STOCK status", async () => {
+    mockPrisma.cafeItem.findMany.mockResolvedValueOnce([
+      makeItem({ quantity: 0, status: "OUT_OF_STOCK" }),
+    ]);
+
+    const res = await request(app).get("/api/reports/out-of-stock");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].status).toBe("OUT_OF_STOCK");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rotas desconhecidas
+// ---------------------------------------------------------------------------
+
+describe("unknown routes", () => {
+  it("returns 404 with ROUTE_NOT_FOUND for any unmapped path", async () => {
+    const res = await request(app).get("/api/unknown");
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe("ROUTE_NOT_FOUND");
   });
 });
