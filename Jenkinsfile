@@ -1,3 +1,16 @@
+// ---------------------------------------------------------------------------
+// Helper: executa `npm run <script>` dentro de <directory> com o env do Jenkins
+// ---------------------------------------------------------------------------
+def npmRun(String directory, String script) {
+    dir(directory) {
+        sh """
+            set -euo pipefail
+            . "\${WORKSPACE}/.jenkins-env"
+            npm run ${script}
+        """
+    }
+}
+
 pipeline {
     agent any
 
@@ -50,27 +63,15 @@ pipeline {
                 stage('Typecheck Frontend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('frontend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run typecheck
-                                '''
-                            }
+                            npmRun('frontend', 'typecheck')
                         }
                     }
                 }
                 stage('Typecheck Backend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('backend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run typecheck
-                                    npm run typecheck:test
-                                '''
-                            }
+                            npmRun('backend', 'typecheck')
+                            npmRun('backend', 'typecheck:test')
                         }
                     }
                 }
@@ -82,26 +83,14 @@ pipeline {
                 stage('Test Frontend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('frontend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run test:coverage
-                                '''
-                            }
+                            npmRun('frontend', 'test:coverage')
                         }
                     }
                 }
                 stage('Test Backend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('backend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run test:coverage
-                                '''
-                            }
+                            npmRun('backend', 'test:coverage')
                         }
                     }
                 }
@@ -113,13 +102,7 @@ pipeline {
                 stage('Build Frontend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('frontend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run build
-                                '''
-                            }
+                            npmRun('frontend', 'build')
                             sh 'bash infra/scripts/package-frontend.sh'
                         }
                     }
@@ -127,13 +110,7 @@ pipeline {
                 stage('Build Backend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('backend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run build
-                                '''
-                            }
+                            npmRun('backend', 'build')
                             sh 'bash infra/scripts/package-backend.sh'
                         }
                     }
