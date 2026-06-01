@@ -1,0 +1,53 @@
+version: "3.8"
+name: cafe-pipeline
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: pipeline-cafe-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pipeline_cafe?schema=public
+    ports:
+      - "3001:3001"
+
+  frontend:
+    image: joaogabrielcosta/cafe-pipeline-frontend:latest
+    container_name: pipeline-cafe-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: pipeline-cafe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pipeline_cafe
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  jenkins:
+    image: jenkins/jenkins:lts-jdk21
+    container_name: pipeline-cafe-jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+
+volumes:
+  postgres_data:
+  jenkins_home:
