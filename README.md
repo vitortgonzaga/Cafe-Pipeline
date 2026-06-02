@@ -318,8 +318,8 @@ O frontend segue uma organização em camadas:
 ### Modelos utilizados
 
 - GPT 5.3
-- Codex
-- GPT 5.5
+- GPT 5.4
+- Claude Sonnet 4.6
 
 ### Como a IA foi utilizada
 
@@ -332,7 +332,7 @@ O frontend segue uma organização em camadas:
 #### Prompt 1
 
 - **Objetivo:** Gerar uma base inicial para a estrutura do backend, seguindo boas práticas de organização, separação de responsabilidades e manutenção do código.
-- **Prompt + Plan.md:** "Seguindo o Plan.md crie uma estrutura base para um backend em Node.js com Express e TypeScript, seguindo boas práticas de organização em camadas, separação de responsabilidades, validação de dados, tratamento de erros e facilidade de manutenção, junto ao README.MD com explicações de como rodar o projeto."
+- **Prompt + Plan.md:** "Seguindo o Plan.md crie uma estrutura base para um backend em Node.js com Express e TypeScript, seguindo boas práticas de organização em camadas, separação de responsabilidades, validação de dados, tratamento de erros e facilidade de manutenção, junto ao README.md com explicações de como rodar o projeto."
 - **Resultado ajustado:** O resultado foi aceito como base inicial e ajustado para seguir a regra de negócio planejada pelo grupo.
 
 #### Prompt 2
@@ -349,4 +349,10 @@ O frontend segue uma organização em camadas:
 
 ### O que não foi feito por IA
 
--
+- Definição e ajustes do `docker-compose.yml`
+- Implementação de rotas backend para movimentações de itens
+- Estruturação e refinamento do `Jenkinsfile`
+- Configurações mais minuciosas de ambiente
+- Configuração e execução das migrações de banco de dados
+- Implementação e ajustes de testes de backend para alcançar uma maior cobertura de testes
+- Configuração Inicial do frontend com Vite
