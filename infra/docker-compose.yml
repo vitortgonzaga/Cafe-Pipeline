@@ -39,14 +39,26 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   jenkins:
-    image: jenkins/jenkins:lts-jdk21
+    build:
+      context: ./jenkins
+      dockerfile: Dockerfile
     container_name: pipeline-cafe-jenkins
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "8080:8080"
       - "50000:50000"
+    environment:
+      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
     volumes:
       - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   postgres_data:
