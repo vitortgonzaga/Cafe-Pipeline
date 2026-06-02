@@ -510,7 +510,7 @@ export function PipelineCafePage() {
         )}
 
         <footer className="pt-10 text-center label-eyebrow opacity-60">
-          Established 2024 — Continuous Deployment Coffee Division
+          Established 2026 — Continuous Deployment Coffee Division
         </footer>
       </div>
 
