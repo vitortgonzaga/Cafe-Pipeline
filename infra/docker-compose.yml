@@ -19,6 +19,7 @@ services:
   frontend:
     image: joaogabrielcosta/cafe-pipeline-frontend:latest
     container_name: pipeline-cafe-frontend
+    platform: linux/amd64
     restart: unless-stopped
     depends_on:
       - backend
