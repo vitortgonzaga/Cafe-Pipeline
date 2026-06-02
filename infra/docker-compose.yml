@@ -9,7 +9,8 @@ services:
     container_name: pipeline-cafe-backend
     restart: unless-stopped
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       PORT: 3001
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pipeline_cafe?schema=public
@@ -35,18 +36,33 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pipeline_cafe"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   jenkins:
-    image: jenkins/jenkins:lts-jdk21
+    image: torress2003/cafe-pipeline-jenkins:latest
     container_name: pipeline-cafe-jenkins
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "8080:8080"
       - "50000:50000"
+    environment:
+      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
     volumes:
       - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   postgres_data:

@@ -1,0 +1,14 @@
+FROM jenkins/jenkins:lts-jdk21
+
+USER root
+
+RUN apt-get update && apt-get install -y \
+    bash \
+    ca-certificates \
+    curl \
+    docker.io \
+    git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+USER jenkins
