@@ -3,23 +3,29 @@ import { renderHook, act } from "@testing-library/react";
 import { useIsMobile } from "./use-mobile";
 
 describe("useIsMobile", () => {
-  let changeHandler: (() => void) | undefined;
+  let changeHandler: EventListener | undefined;
 
   beforeEach(() => {
     changeHandler = undefined;
     Object.defineProperty(window, "innerWidth", { writable: true, configurable: true, value: 500 });
-    window.matchMedia = ((query: string) => ({
-      matches: true,
-      media: query,
-      addEventListener: (_event: string, handler: () => void) => {
-        changeHandler = handler;
-      },
-      removeEventListener: () => undefined,
-      addListener: () => undefined,
-      removeListener: () => undefined,
-      dispatchEvent: () => true,
-      onchange: null,
-    })) as typeof window.matchMedia;
+    window.matchMedia = ((query: string): MediaQueryList => {
+      const mediaQueryList: MediaQueryList = {
+        matches: true,
+        media: query,
+        onchange: null,
+        addEventListener: (_type, listener) => {
+          if (typeof listener === "function") {
+            changeHandler = listener as EventListener;
+          }
+        },
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        dispatchEvent: () => true,
+      };
+
+      return mediaQueryList;
+    }) as typeof window.matchMedia;
   });
 
   afterEach(() => {
@@ -36,7 +42,7 @@ describe("useIsMobile", () => {
 
     act(() => {
       Object.defineProperty(window, "innerWidth", { writable: true, configurable: true, value: 1200 });
-      changeHandler?.();
+      changeHandler?.(new Event("change"));
     });
 
     expect(result.current).toBe(false);
