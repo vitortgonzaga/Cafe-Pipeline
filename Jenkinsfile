@@ -1,3 +1,16 @@
+// ---------------------------------------------------------------------------
+// Helper: executa `npm run <script>` dentro de <directory> com o env do Jenkins
+// ---------------------------------------------------------------------------
+def npmRun(String directory, String script) {
+    dir(directory) {
+        sh """
+            set -euo pipefail
+            . "\${WORKSPACE}/.jenkins-env"
+            npm run ${script}
+        """
+    }
+}
+
 pipeline {
     agent any
 
@@ -45,31 +58,39 @@ pipeline {
             }
         }
 
+        stage('Typecheck') {
+            parallel {
+                stage('Typecheck Frontend') {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            npmRun('frontend', 'typecheck')
+                        }
+                    }
+                }
+                stage('Typecheck Backend') {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            npmRun('backend', 'typecheck')
+                            npmRun('backend', 'typecheck:test')
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Test') {
             parallel {
                 stage('Test Frontend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('frontend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run test:coverage
-                                '''
-                            }
+                            npmRun('frontend', 'test:coverage')
                         }
                     }
                 }
                 stage('Test Backend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('backend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run test:coverage
-                                '''
-                            }
+                            npmRun('backend', 'test:coverage')
                         }
                     }
                 }
@@ -81,13 +102,7 @@ pipeline {
                 stage('Build Frontend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('frontend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run build
-                                '''
-                            }
+                            npmRun('frontend', 'build')
                             sh 'bash infra/scripts/package-frontend.sh'
                         }
                     }
@@ -95,13 +110,7 @@ pipeline {
                 stage('Build Backend') {
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            dir('backend') {
-                                sh '''
-                                    set -euo pipefail
-                                    . "${WORKSPACE}/.jenkins-env"
-                                    npm run build
-                                '''
-                            }
+                            npmRun('backend', 'build')
                             sh 'bash infra/scripts/package-backend.sh'
                         }
                     }
@@ -125,7 +134,7 @@ pipeline {
     post {
         always {
             archiveArtifacts(
-                artifacts: 'artifacts/frontend-package.tar.gz, artifacts/backend-package.tar.gz, frontend/coverage/**, frontend/html/**, backend/coverage/**',
+                artifacts: 'artifacts/frontend-package.tar.gz, artifacts/backend-package.tar.gz, frontend/coverage/**, frontend/html/**, backend/coverage/**, backend/test-results/**',
                 fingerprint: true,
                 allowEmptyArchive: true
             )
