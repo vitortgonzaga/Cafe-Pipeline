@@ -20,7 +20,7 @@ pipeline {
     }
 
     environment {
-        NODE_VERSION = '20.19.0'
+        NODE_VERSION = '22.12.0'
         CI = 'true'
     }
 

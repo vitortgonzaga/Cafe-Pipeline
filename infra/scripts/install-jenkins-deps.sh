@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NODE_VERSION="${NODE_VERSION:-20.19.0}"
+NODE_VERSION="${NODE_VERSION:-22.12.0}"
 NODE_DIR="${HOME}/.local/node"
 WORKSPACE="${WORKSPACE:-$(pwd)}"
 
@@ -46,10 +46,13 @@ install_curl() {
 install_curl
 install_node
 
+export PATH="${NODE_DIR}/bin:${PATH}"
+export NODE_DIR
+
 cat > "${WORKSPACE}/.jenkins-env" <<EOF
 export PATH="${NODE_DIR}/bin:\${PATH}"
 export NODE_DIR="${NODE_DIR}"
 EOF
 
 echo "Node.js $( "${NODE_DIR}/bin/node" -v )"
-echo "npm $( "${NODE_DIR}/bin/npm" -v )"
+echo "npm $( npm -v )"
