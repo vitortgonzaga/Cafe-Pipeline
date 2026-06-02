@@ -13,7 +13,10 @@ describe("useIsMobile", () => {
         matches: true,
         media: query,
         onchange: null,
-        addEventListener: (_type, listener) => {
+        addEventListener: (
+          _type: string,
+          listener: EventListenerOrEventListenerObject | null,
+        ) => {
           if (typeof listener === "function") {
             changeHandler = listener as EventListener;
           }
