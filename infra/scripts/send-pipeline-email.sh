@@ -11,7 +11,17 @@ SMTP_FROM="${SMTP_FROM:-${SMTP_USER}}"
 PIPELINE_STATUS="${PIPELINE_STATUS:-${BUILD_RESULT:-UNKNOWN}}"
 PIPELINE_JOB="${PIPELINE_JOB:-${JOB_NAME:-unknown-job}}"
 PIPELINE_BUILD="${PIPELINE_BUILD:-${BUILD_NUMBER:-0}}"
-PIPELINE_URL="${PIPELINE_URL:-${BUILD_URL:-N/A}}"
+PIPELINE_BRANCH="${BRANCH_NAME:-${GIT_BRANCH:-N/A}}"
+PIPELINE_COMMIT="${GIT_COMMIT:-N/A}"
+PIPELINE_DATE="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+case "${PIPELINE_STATUS}" in
+  SUCCESS) STATUS_LABEL="SUCCESS - pipeline completed successfully" ;;
+  FAILURE) STATUS_LABEL="FAILURE - action required" ;;
+  UNSTABLE) STATUS_LABEL="UNSTABLE - review test results" ;;
+  ABORTED) STATUS_LABEL="ABORTED - execution interrupted" ;;
+  *) STATUS_LABEL="${PIPELINE_STATUS}" ;;
+esac
 
 # Port 465 uses implicit TLS (smtps://). Port 587 uses STARTTLS (smtp:// + --ssl-reqd).
 if [[ "${SMTP_SSL:-}" == "true" ]] || [[ "${SMTP_PORT}" == "465" ]]; then
@@ -32,22 +42,42 @@ if ! command -v curl >/dev/null 2>&1; then
   exit 1
 fi
 
-subject="Pipeline ${PIPELINE_JOB} #${PIPELINE_BUILD} - ${PIPELINE_STATUS}"
+subject="[Cafe Pipeline] ${PIPELINE_JOB} #${PIPELINE_BUILD} - ${PIPELINE_STATUS}"
 body=$(cat <<EOF
-Pipeline execution summary
+Cafe Pipeline CI/CD Report
 ==========================
 
-Job: ${PIPELINE_JOB}
-Build: #${PIPELINE_BUILD}
-Status: ${PIPELINE_STATUS}
-URL: ${PIPELINE_URL}
+Status
+------
+${STATUS_LABEL}
 
-Artifacts:
-- frontend-package.tar.gz
-- backend-package.tar.gz
-- frontend coverage report (frontend/coverage)
-- backend coverage report (backend/coverage)
-- frontend test report/build output (frontend/html)
+Execution
+---------
+Job:      ${PIPELINE_JOB}
+Build:    #${PIPELINE_BUILD}
+Date:     ${PIPELINE_DATE}
+Branch:   ${PIPELINE_BRANCH}
+Commit:   ${PIPELINE_COMMIT}
+
+Generated artifacts
+-------------------
+- artifacts/frontend-package.tar.gz
+- artifacts/backend-package.tar.gz
+- frontend/coverage/
+- backend/coverage/
+- frontend/html/
+- backend/test-results/
+
+Pipeline stages
+---------------
+- Checkout
+- Setup Jenkins dependencies
+- Install frontend and backend dependencies
+- Typecheck frontend and backend
+- Run coverage tests
+- Build and package artifacts
+
+This message was generated automatically by Jenkins.
 EOF
 )
 
