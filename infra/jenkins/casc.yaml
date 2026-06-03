@@ -1,0 +1,30 @@
+jenkins:
+  systemMessage: "Cafe Pipeline Jenkins"
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: true
+      users:
+        - id: "${JENKINS_ADMIN_USER}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+jobs:
+  - script: >
+      pipelineJob('${JENKINS_JOB_NAME}') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('${JENKINS_REPOSITORY_URL}')
+                }
+                branch('*/${JENKINS_REPOSITORY_BRANCH}')
+              }
+            }
+            scriptPath('${JENKINSFILE_PATH}')
+          }
+        }
+      }

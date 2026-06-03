@@ -46,13 +46,7 @@ pipeline {
                 }
                 stage('Install Backend') {
                     steps {
-                        dir('backend') {
-                            sh '''
-                                set -euo pipefail
-                                . "${WORKSPACE}/.jenkins-env"
-                                npm ci
-                            '''
-                        }
+                        sh 'bash infra/scripts/install-backend-deps.sh'
                     }
                 }
             }
@@ -117,22 +111,17 @@ pipeline {
                 }
             }
         }
-
-        stage('Notify') {
-            steps {
-                script {
-                    env.PIPELINE_STATUS = currentBuild.currentResult ?: 'SUCCESS'
-                    env.PIPELINE_JOB = env.JOB_NAME
-                    env.PIPELINE_BUILD = env.BUILD_NUMBER
-                    env.PIPELINE_URL = env.BUILD_URL
-                }
-                sh 'bash infra/scripts/send-pipeline-email.sh'
-            }
-        }
     }
 
     post {
         always {
+            script {
+                env.PIPELINE_STATUS = currentBuild.currentResult ?: 'SUCCESS'
+                env.PIPELINE_JOB = env.JOB_NAME
+                env.PIPELINE_BUILD = env.BUILD_NUMBER
+                env.PIPELINE_URL = env.BUILD_URL
+            }
+            sh 'bash infra/scripts/send-pipeline-email.sh'
             archiveArtifacts(
                 artifacts: 'artifacts/frontend-package.tar.gz, artifacts/backend-package.tar.gz, frontend/coverage/**, frontend/html/**, backend/coverage/**, backend/test-results/**',
                 fingerprint: true,
