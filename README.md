@@ -148,6 +148,10 @@ cp .env.example .env
 
 | Variável | Obrigatória | Descrição |
 | --- | --- | --- |
+| `JENKINS_JOB_NAME` | Não | Nome do job criado automaticamente pelo Jenkins Configuration as Code |
+| `JENKINS_REPOSITORY_URL` | Sim | URL do repositório Git usado pelo job do Jenkins |
+| `JENKINS_REPOSITORY_BRANCH` | Sim | Branch monitorada pelo job do Jenkins |
+| `JENKINSFILE_PATH` | Não | Caminho do `Jenkinsfile` dentro do repositório |
 | `NOTIFICATION_EMAIL` | Sim | Destinatário da notificação do pipeline |
 | `SMTP_HOST` | Sim | Servidor SMTP |
 | `SMTP_USER` | Sim | Usuário SMTP |
@@ -160,6 +164,10 @@ cp .env.example .env
 Exemplo:
 
 ```env
+JENKINS_JOB_NAME=cafe-pipeline
+JENKINS_REPOSITORY_URL=https://github.com/vitortgonzaga/Cafe-Pipeline.git
+JENKINS_REPOSITORY_BRANCH=master
+JENKINSFILE_PATH=Jenkinsfile
 NOTIFICATION_EMAIL=your-email@example.com
 SMTP_FROM=cafepipelineci@gmail.com
 SMTP_HOST=smtp.gmail.com
@@ -337,15 +345,15 @@ O frontend segue uma organização em camadas:
 
 #### Prompt 2
 
-- **Objetivo:**
-- **Prompt:**
-- **Resultado aceito/ajustado/descartado:**
+- **Objetivo:** Revisar a cobertura de testes do backend e identificar cenários importantes que ainda não estavam cobertos.
+- **Prompt:** "Analise a estrutura do backend em Node.js/Express/TypeScript, especialmente controllers, services, repositories, middlewares e rotas. Com base nos arquivos de teste existentes e no relatório de cobertura, indique quais pontos ainda precisam de testes para aumentar a cobertura real acima de 90%, priorizando regras de negócio, validações, erros HTTP, movimentações de estoque e casos de integração com Supertest. Explique quais cenários devem ser testados e por quê."
+- **Resultado ajustado:** A resposta foi usada como checklist para complementar os testes do backend. O grupo aceitou os cenários ligados a regras de negócio, validações e endpoints, ajustou os mocks/factories conforme a estrutura real do projeto e descartou sugestões que dependiam de banco real nos testes unitários.
 
 #### Prompt 3
 
-- **Objetivo:**
-- **Prompt:**
-- **Resultado aceito/ajustado/descartado:**
+- **Objetivo:** Apoiar a criação de scripts `.sh` reutilizáveis para organizar as etapas chamadas pelo `Jenkinsfile`.
+- **Prompt:** "Crie scripts shell para um pipeline Jenkins de um projeto com backend Node.js/Express/Prisma e frontend React/Vite. Os scripts devem ser pequenos, reutilizáveis e seguros, usando `set -euo pipefail`, recebendo o workspace do Jenkins quando necessário e separando responsabilidades como instalar dependências, empacotar o backend, empacotar o frontend e enviar notificação por e-mail via SMTP. Os scripts devem ser fáceis de chamar a partir de um Jenkinsfile."
+- **Resultado ajustado:** A IA ajudou com a estrutura inicial dos scripts. O grupo ajustou caminhos, nomes de artefatos, suporte a dependências nativas do frontend, uso de `.env`, empacotamento em `artifacts/` e envio de e-mail por `curl` conforme as variáveis definidas no `docker-compose.yml` e no ambiente do Jenkins.
 
 ### O que não foi feito por IA
 
