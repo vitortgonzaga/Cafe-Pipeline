@@ -89,6 +89,38 @@ describe("ItemService", () => {
     });
   });
 
+  it("trims custom reason when applying IN movement", async () => {
+    const repository = buildRepositoryMock();
+    const service = new ItemService(repository as never);
+
+    repository.findById.mockResolvedValue({ id: itemId, quantity: 5, minQuantity: 2 });
+    repository.applyMovement.mockResolvedValue({ id: itemId, quantity: 7 });
+
+    await service.addStock(itemId, {
+      quantity: 2,
+      reason: "  reposicao manual  ",
+      responsible: "vitor",
+    });
+
+    expect(repository.applyMovement).toHaveBeenCalledWith(
+      { id: itemId, quantity: 5, minQuantity: 2 },
+      {
+        type: "IN",
+        quantity: 2,
+        reason: "reposicao manual",
+        responsible: "vitor",
+      },
+    );
+  });
+
+  it("uses the default AppError code when none is provided", () => {
+    const error = new AppError(500, "Unexpected failure");
+
+    expect(error.code).toBe("APP_ERROR");
+    expect(error.statusCode).toBe(500);
+    expect(error.message).toBe("Unexpected failure");
+  });
+
   it("applies OUT movement and blocks insufficient stock", async () => {
     const repository = buildRepositoryMock();
     const service = new ItemService(repository as never);

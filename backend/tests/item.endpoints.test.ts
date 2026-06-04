@@ -196,6 +196,34 @@ describe("POST /api/items/:id/movements/in", () => {
 // ---------------------------------------------------------------------------
 
 describe("POST /api/items/:id/movements/out", () => {
+  it("consumes stock and returns 200 with the updated item", async () => {
+    mockPrisma.cafeItem.findUnique.mockResolvedValueOnce(makeItem({ quantity: 5, minQuantity: 2 }));
+    mockPrisma.cafeItem.update.mockResolvedValueOnce(makeItem({ quantity: 3, status: "AVAILABLE" }));
+
+    const res = await request(app)
+      .post(`/api/items/${ITEM_ID}/movements/out`)
+      .send(makeMovementOutPayload({ quantity: 2, reason: "consumo no balcao" }));
+
+    expect(res.status).toBe(200);
+    expect(res.body.quantity).toBe(3);
+    expect(mockPrisma.cafeItem.update).toHaveBeenCalledWith({
+      where: { id: ITEM_ID },
+      data: {
+        quantity: 3,
+        status: "AVAILABLE",
+      },
+    });
+    expect(mockPrisma.stockMovement.create).toHaveBeenCalledWith({
+      data: {
+        itemId: ITEM_ID,
+        type: "OUT",
+        quantity: 2,
+        reason: "consumo no balcao",
+        responsible: "vitor",
+      },
+    });
+  });
+
   it("returns 400 when reason is empty", async () => {
     const res = await request(app)
       .post(`/api/items/${ITEM_ID}/movements/out`)
