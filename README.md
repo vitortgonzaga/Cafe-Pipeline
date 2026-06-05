@@ -334,6 +334,8 @@ O frontend segue uma organização em camadas:
 - Pair programming durante o desenvolvimento
 - Apoio em revisões constantes de implementação, estrutura e documentação
 - Suporte para validação de decisões técnicas ao longo do projeto
+- Configuração do Vitest para o frontend
+- Participação na elaboração de testes de frontend, ajudando a melhorar a cobertura analisando os testes gerados e completou os casos
 
 ### Prompts utilizados
 
