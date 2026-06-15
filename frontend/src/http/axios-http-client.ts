@@ -37,7 +37,9 @@ export class AxiosHttpClient implements HttpClient {
     });
   }
 
-  async request<TResponse, TBody>(request: HttpRequest<TBody>): Promise<HttpResponse<TResponse>> {
+  async request<TResponse = unknown, TBody = unknown>(
+    request: HttpRequest<TBody>,
+  ): Promise<HttpResponse<TResponse>> {
     const config: AxiosRequestConfig = {
       url: request.url,
       method: request.method,
